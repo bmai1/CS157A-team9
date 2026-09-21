@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Public+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container">
+      <a class="wordmark" href="${pageContext.request.contextPath}/index.jsp">
+        </svg>
+        ResearchMatch
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="${pageContext.request.contextPath}/login.jsp">Log in</a>
+        <a class="btn btn-primary" href="${pageContext.request.contextPath}/register.jsp">Create account</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
