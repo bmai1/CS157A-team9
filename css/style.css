@@ -6,11 +6,11 @@
   --ink: #15232d;
   --muted: #55666f;
   --line: #d8e1e6;
-  --accent: #0e6e68;
-  --accent-strong: #0a5551;
+  --accent: #0e466e;
+  --accent-strong: #0a2855;
   --tint: #e2f2f0;
 
-  --font-display: "Bricolage Grotesque", "Public Sans", system-ui, sans-serif;
+  --font-display: "Public Sans", system-ui, sans-serif;
   --font-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
