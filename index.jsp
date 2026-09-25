@@ -5,9 +5,9 @@
 <section class="hero">
   <div class="container">
     <div>
-      <h1>Find the research that fits you.</h1>
+      <h1><b>Find the research that fits you.</b></h1>
       <p class="lead">
-        ResearchMatch helps students quickly discover research opportunities and stuff
+        ResearchMatch helps students quickly discover research opportunities.
       </p>
       <div class="hero-actions">
         <a class="btn btn-primary" href="${pageContext.request.contextPath}/register.jsp">Create account</a>
@@ -21,21 +21,21 @@
         <ul class="chips">
           <li>Machine learning</li>
           <li>Robotics</li>
-          <li>Afghjkl</li>
+          <li>Money</li>
         </ul>
       </div>
 
       <div class="match-row is-best">
         <span class="tag">Best match</span>
-        <p class="match-title">Predicting flu outbreaks from clinic data</p>
-        <p class="match-meta">Public Health Lab &middot; 6 hours a week</p>
+        <p class="match-title">Cancer research</p>
+        <p class="match-meta">Public Health Lab &middot; Full-time</p>
       </div>
       <div class="match-row">
-        <p class="match-title">Sleep and memory study</p>
-        <p class="match-meta">Psychology Lab &middot; 4 hours a week</p>
+        <p class="match-title">Sleep deprivation study</p>
+        <p class="match-meta">Psychology Lab &middot; Part-time</p>
       </div>
       <div class="match-row">
-        <p class="match-title">Low-cost air quality sensors</p>
+        <p class="match-title">Save Earth before it explodes!!!</p>
         <p class="match-meta">Environmental Engineering &middot; 8 hours a week</p>
       </div>
 
@@ -54,7 +54,7 @@
       </li>
       <li>
         <h3>Find researchers</h3>
-        <p>text text text text</p>
+        <p>text text text</p>
       </li>
       <li>
         <h3>Reach out</h3>
