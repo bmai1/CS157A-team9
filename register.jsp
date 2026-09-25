@@ -22,6 +22,33 @@
         <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required>
         <span class="hint">Use at least 8 characters.</span>
       </div>
+      
+      <div class="field">
+        <label>I am a...</label>
+
+        <div class="role-options">
+          <label>
+            <input
+              type="radio"
+              name="role"
+              value="student"
+              required
+            >
+            Student
+          </label>
+
+          <label>
+            <input
+              type="radio"
+              name="role"
+              value="researcher"
+              required
+            >
+            Researcher
+          </label>
+        </div>
+      </div>
+
       <button type="submit" class="btn btn-primary">Create account</button>
     </form>
 

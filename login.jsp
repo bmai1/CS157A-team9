@@ -5,7 +5,7 @@
 <section class="auth">
   <div class="auth-box">
     <h1>Log in</h1>
-    <p class="sub">Welcome back. Enter your details to continue exploring.</p>
+    <p class="sub">Welcome back.</p>
 
     <%-- Point this at your login servlet (for example @WebServlet("/login")) --%>
     <form action="${pageContext.request.contextPath}/login" method="post">
@@ -30,32 +30,6 @@
           autocomplete="current-password"
           required
         >
-      </div>
-
-      <div class="field">
-        <label>Role</label>
-
-        <div class="role-options">
-          <label>
-            <input
-              type="radio"
-              name="role"
-              value="student"
-              required
-            >
-            Student
-          </label>
-
-          <label>
-            <input
-              type="radio"
-              name="role"
-              value="researcher"
-              required
-            >
-            Researcher
-          </label>
-        </div>
       </div>
 
       <button type="submit" class="btn btn-primary">Log in</button>
