@@ -507,3 +507,12 @@ a {
   text-align: center;
   font-size: 0.95rem;
 }
+.field select {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background: #ffffff;
+  border: 1.5px solid #b9c6cd;
+  border-radius: 8px;
+  color: var(--ink);
+  font: inherit;
+}

@@ -9,18 +9,41 @@
   String name = request.getParameter("name");
   String department = request.getParameter("department");
   String location = request.getParameter("location");
+  String areaId = request.getParameter("area");               // drop down: an area_id, or "" for any
+  String universityId = request.getParameter("university");   // drop down: a university_id, or "" for any
   boolean phdOnly = "1".equals(request.getParameter("phd"));   // checkbox sends "1" when checked
 
   if (name == null) name = "";
   if (department == null) department = "";
   if (location == null) location = "";
+  if (areaId == null) areaId = "";
+  if (universityId == null) universityId = "";
   name = name.trim();
   department = department.trim();
   location = location.trim();
 
   List<Map<String, Object>> researchers = new ArrayList<>();
+  List<Map<String, Object>> areas = new ArrayList<>();          // choices for the Research area drop-down
+  List<Map<String, Object>> universities = new ArrayList<>();   // choices for the University drop-down
 
   try (Connection con = getConnection(application)) {
+    // 0. Fill the two drop-downs from the database, so new areas/universities show up automatically.
+    Statement listStmt = con.createStatement();
+    ResultSet areaRs = listStmt.executeQuery("SELECT area_id, name FROM research_area ORDER BY name");
+    while (areaRs.next()) {
+      Map<String, Object> a = new HashMap<>();
+      a.put("id", String.valueOf(areaRs.getInt("area_id")));
+      a.put("name", areaRs.getString("name"));
+      areas.add(a);
+    }
+    ResultSet uniRs = listStmt.executeQuery("SELECT university_id, name FROM university ORDER BY name");
+    while (uniRs.next()) {
+      Map<String, Object> un = new HashMap<>();
+      un.put("id", String.valueOf(uniRs.getInt("university_id")));
+      un.put("name", uniRs.getString("name"));
+      universities.add(un);
+    }
+
     // 2. Build the query. "WHERE 1=1" is always true, so every filter below
     //    can just add "AND ..." without worrying whether it is the first one.
     StringBuilder sql = new StringBuilder(
@@ -48,6 +71,17 @@
       params.add("%" + location + "%");
       params.add("%" + location + "%");
       params.add("%" + location + "%");
+    }
+    if (!areaId.isEmpty()) {
+      // research areas are many-many, so they live in the junction table researcher_research_area.
+      // Keep only researchers whose id appears there together with the chosen area.
+      sql.append("AND r.researcher_id IN "
+               + "(SELECT rra.researcher_id FROM researcher_research_area rra WHERE rra.area_id = ?) ");
+      params.add(Integer.parseInt(areaId));
+    }
+    if (!universityId.isEmpty()) {
+      sql.append("AND un.university_id = ? ");
+      params.add(Integer.parseInt(universityId));
     }
     if (phdOnly) {
       sql.append("AND r.accepting_phd = 1 ");
@@ -90,6 +124,24 @@
         <div class="field">
           <label for="name">Researcher name</label>
           <input type="text" id="name" name="name" value="<%= esc(name) %>" placeholder="e.g. Bennett">
+        </div>
+        <div class="field">
+          <label for="area">Research area</label>
+          <select id="area" name="area">
+            <option value="">Any area</option>
+            <% for (Map<String, Object> a : areas) { %>
+              <option value="<%= a.get("id") %>" <%= a.get("id").equals(areaId) ? "selected" : "" %>><%= esc(a.get("name")) %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="field">
+          <label for="university">University</label>
+          <select id="university" name="university">
+            <option value="">Any university</option>
+            <% for (Map<String, Object> un : universities) { %>
+              <option value="<%= un.get("id") %>" <%= un.get("id").equals(universityId) ? "selected" : "" %>><%= esc(un.get("name")) %></option>
+            <% } %>
+          </select>
         </div>
         <div class="field">
           <label for="department">Department</label>
