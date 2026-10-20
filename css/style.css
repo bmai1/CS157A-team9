@@ -454,3 +454,50 @@ a {
     grid-template-columns: 1fr;
   }
 }
+/* ---------- Researcher search results ---------- */
+
+.result-count {
+  margin-bottom: 0.75rem;
+  color: var(--muted);
+}
+
+.result {
+  margin-bottom: 0.75rem;
+  padding: 1.1rem 1.25rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.result-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.result-title {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.result-meta {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.badge {
+  padding: 0.1rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge-yes {
+  background: var(--tint);
+  border-color: #9fd3cb;
+  color: #0b5148;
+}
