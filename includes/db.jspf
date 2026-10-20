@@ -1,0 +1,29 @@
+<%-- Shared database code. Pages include it with: <%@ include file="includes/db.jspf" %> --%>
+<%@ page import="java.sql.*, java.util.*, java.io.InputStream" %>
+<%!
+  // Opens a connection using the settings in WEB-INF/db.properties
+  Connection getConnection(ServletContext app) throws Exception {
+    Properties props = new Properties();
+    InputStream in = app.getResourceAsStream("/WEB-INF/db.properties");
+    if (in == null) {
+      throw new Exception("Missing WEB-INF/db.properties");
+    }
+    props.load(in);
+    in.close();
+
+    try {
+      Class.forName("com.mysql.cj.jdbc.Driver");   // Connector/J 8 or newer
+    } catch (ClassNotFoundException e) {
+      Class.forName("com.mysql.jdbc.Driver");      // older 5.1 driver
+    }
+    return DriverManager.getConnection(
+        props.getProperty("db.url"), props.getProperty("db.user"), props.getProperty("db.password"));
+  }
+
+  // Makes text safe to print in HTML (stops < > & " from breaking the page)
+  String esc(Object value) {
+    if (value == null) return "";
+    return value.toString().replace("&", "&amp;").replace("<", "&lt;")
+        .replace(">", "&gt;").replace("\"", "&quot;");
+  }
+%>

@@ -1,5 +1,21 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<% String pageTitle = "Find researchers | ResearchMatch"; %>
+<%@ include file="includes/db.jspf" %>
+<%
+  String pageTitle = "Find researchers | ResearchMatch";
+  String error = null;
+  int researcherCount = 0;
+
+  // Test the connection: count the researchers in the database
+  try (Connection con = getConnection(application)) {
+    Statement stmt = con.createStatement();
+    ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM researcher");
+    if (rs.next()) {
+      researcherCount = rs.getInt(1);
+    }
+  } catch (Exception e) {
+    error = e.getMessage();
+  }
+%>
 <%@ include file="includes/header.jspf" %>
 
 <section class="page">
@@ -33,7 +49,11 @@
 
       <!-- Results: we will fill this in from the database in the next steps -->
       <div class="results">
-        <p class="empty">Results will appear here.</p>
+                <% if (error != null) { %>
+          <p class="empty">Database error: <%= esc(error) %></p>
+        <% } else { %>
+          <p class="empty">Connected! There are <%= researcherCount %> researchers in the database.</p>
+        <% } %>
       </div>
     </div>
   </div>
