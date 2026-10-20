@@ -516,3 +516,6 @@ a {
   color: var(--ink);
   font: inherit;
 }
+.result .chips {
+  margin-top: 0.6rem;
+}

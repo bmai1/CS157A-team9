@@ -25,6 +25,7 @@
   List<Map<String, Object>> researchers = new ArrayList<>();
   List<Map<String, Object>> areas = new ArrayList<>();          // choices for the Research area drop-down
   List<Map<String, Object>> universities = new ArrayList<>();   // choices for the University drop-down
+  Map<Integer, List<String>> areasByResearcher = new HashMap<>(); // researcher_id -> their research areas
 
   try (Connection con = getConnection(application)) {
     // 0. Fill the two drop-downs from the database, so new areas/universities show up automatically.
@@ -106,6 +107,21 @@
       row.put("phd", rs.getInt("accepting_phd") == 1);
       researchers.add(row);
     }
+
+    // 4. Research areas of every researcher. Studies is many-many, so we join the
+    //    junction table researcher_research_area to research_area to get the area names.
+    ResultSet areaLinks = listStmt.executeQuery(
+        "SELECT rra.researcher_id, ra.name "
+      + "FROM researcher_research_area rra "
+      + "JOIN research_area ra ON ra.area_id = rra.area_id "
+      + "ORDER BY ra.name");
+    while (areaLinks.next()) {
+      int researcherId = areaLinks.getInt("researcher_id");
+      if (!areasByResearcher.containsKey(researcherId)) {
+        areasByResearcher.put(researcherId, new ArrayList<>());   // first area for this researcher
+      }
+      areasByResearcher.get(researcherId).add(areaLinks.getString("name"));
+    }
   } catch (Exception e) {
     error = e.getMessage();
   }
@@ -181,6 +197,16 @@
               </div>
               <p class="result-meta"><%= esc(r.get("department")) %></p>
               <p class="result-meta"><%= esc(r.get("university")) %> &middot; <%= esc(r.get("location")) %></p>
+              
+              <%-- Research areas as small tags. Some researchers have none, so check for null. --%>
+              <% List<String> rAreas = areasByResearcher.get((Integer) r.get("id"));
+                 if (rAreas != null) { %>
+                <ul class="chips">
+                  <% for (String areaName : rAreas) { %>
+                    <li><%= esc(areaName) %></li>
+                  <% } %>
+                </ul>
+              <% } %>
             </div>
           <% } %>
         <% } %>
