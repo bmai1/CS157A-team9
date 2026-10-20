@@ -400,3 +400,57 @@ a {
     grid-template-columns: 1fr;
   }
 }
+/* ---------- Researcher search page ---------- */
+
+.page {
+  padding-block: 2.5rem 4rem;
+}
+
+.page .sub {
+  margin: 0.4rem 0 1.5rem;
+  color: var(--muted);
+}
+
+.search-layout {
+  display: grid;
+  grid-template-columns: 17rem 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.filters {
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.filters .btn {
+  width: 100%;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 400 !important;
+}
+
+.check input {
+  width: auto;
+}
+
+.empty {
+  padding: 2rem;
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .search-layout {
+    grid-template-columns: 1fr;
+  }
+}
