@@ -188,7 +188,7 @@
 
           <% for (Map<String, Object> r : researchers) {
                boolean phd = (Boolean) r.get("phd"); %>
-            <div class="result">
+            <a class="result" href="researcher.jsp?id=<%= r.get("id") %>">
               <div class="result-top">
                 <span class="result-title"><%= esc(r.get("name")) %></span>
                 <span class="badge <%= phd ? "badge-yes" : "" %>">
@@ -207,7 +207,7 @@
                   <% } %>
                 </ul>
               <% } %>
-            </div>
+            </a>
           <% } %>
         <% } %>
       </div>
