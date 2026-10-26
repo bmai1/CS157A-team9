@@ -613,3 +613,8 @@ a.result:hover {
   color: var(--muted);
   font-size: 0.95rem;
 }
+
+.apply-link {
+  margin-left: 0.5rem;
+  font-weight: 600;
+}

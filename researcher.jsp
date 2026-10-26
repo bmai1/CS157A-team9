@@ -14,6 +14,7 @@
   
   List<String> areas = new ArrayList<>();    // this researcher's research areas
   List<Map<String, Object>> publications = new ArrayList<>();   // this researcher's papers
+  List<Map<String, Object>> opportunities = new ArrayList<>();  // this researcher's open positions
 
   Map<String, Object> profile = null;        // stays null if no researcher has this id
 
@@ -131,6 +132,28 @@
 
         publications.add(pub);
       }
+
+      // 6. Open opportunities. Offers is one-many (each opportunity has exactly one
+      //    researcher), so researcher_id is a column of opportunity: no join needed.
+      //    Only show positions a student can still apply to.
+      PreparedStatement oppPs = con.prepareStatement(
+          "SELECT o.title, o.opportunity_type, o.funding_available, o.expected_start_term, "
+        + "       o.application_deadline, o.application_url "
+        + "FROM opportunity o "
+        + "WHERE o.researcher_id = ? AND o.status = 'Open' "
+        + "ORDER BY o.application_deadline");
+      oppPs.setInt(1, researcherId);
+      ResultSet oppRs = oppPs.executeQuery();
+      while (oppRs.next()) {
+        Map<String, Object> opp = new HashMap<>();
+        opp.put("title", oppRs.getString("title"));
+        opp.put("type", oppRs.getString("opportunity_type"));
+        opp.put("funded", oppRs.getInt("funding_available") == 1);
+        opp.put("start", oppRs.getString("expected_start_term"));      // can be NULL
+        opp.put("deadline", oppRs.getString("application_deadline"));  // can be NULL
+        opp.put("url", oppRs.getString("application_url"));            // can be NULL
+        opportunities.add(opp);
+      }
     }
   } catch (Exception e) {
     error = e.getMessage();
@@ -240,6 +263,34 @@
                     <% for (int i = 0; i < coauthors.size(); i++) {
                          Map<String, Object> co = coauthors.get(i); %><%= i > 0 ? ", " : "" %><a href="researcher.jsp?id=<%= co.get("id") %>"><%= esc(co.get("name")) %></a><% } %>
                   </p>
+                <% } %>
+              </li>
+            <% } %>
+          </ul>
+        <% } %>
+      </div>
+      
+      <!-- Open opportunities -->
+      <div class="card">
+        <h2>Open opportunities</h2>
+        <% if (opportunities.isEmpty()) { %>
+          <p>No open opportunities right now.</p>
+        <% } else { %>
+          <ul class="plain-list">
+            <% for (Map<String, Object> opp : opportunities) {
+                 String url = (String) opp.get("url");
+                 boolean funded = (Boolean) opp.get("funded"); %>
+              <li>
+                <p class="item-title"><%= esc(opp.get("title")) %></p>
+                <p class="item-meta">
+                  <%= esc(opp.get("type")) %>
+                  <%= opp.get("start") == null ? "" : " &middot; Starts " + esc(opp.get("start")) %>
+                  <%= opp.get("deadline") == null ? "" : " &middot; Apply by " + esc(opp.get("deadline")) %>
+                </p>
+                <span class="badge <%= funded ? "badge-yes" : "" %>"><%= funded ? "Funded" : "Unfunded" %></span>
+                <%-- Only link to the application if it is a normal web address --%>
+                <% if (url != null && url.startsWith("http")) { %>
+                  <a class="apply-link" href="<%= esc(url) %>" target="_blank">Apply &rarr;</a>
                 <% } %>
               </li>
             <% } %>
