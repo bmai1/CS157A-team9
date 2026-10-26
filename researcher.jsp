@@ -13,6 +13,7 @@
   }
   
   List<String> areas = new ArrayList<>();    // this researcher's research areas
+  List<Map<String, Object>> publications = new ArrayList<>();   // this researcher's papers
 
   Map<String, Object> profile = null;        // stays null if no researcher has this id
 
@@ -72,6 +73,64 @@
       while (areaRs.next()) {                                        // a researcher can have many areas
         areas.add(areaRs.getString("name"));
       } 
+
+      // 5. Publications. Writes is many-many: the junction table researcher_publication
+      //    says which researcher wrote which paper. Newest papers first.
+      PreparedStatement pubPs = con.prepareStatement(
+          "SELECT p.publication_id, p.title, p.publication_year, p.venue, p.publication_url "
+        + "FROM publication p "
+        + "JOIN researcher_publication rp ON rp.publication_id = p.publication_id "
+        + "WHERE rp.researcher_id = ? "
+        + "ORDER BY p.publication_year DESC, p.title");
+      pubPs.setInt(1, researcherId);
+      ResultSet pubRs = pubPs.executeQuery();
+
+      // Two more queries, prepared once and run once per paper with a different ?:
+      //   - the paper's research topics (publication_research_area, also many-many)
+      //   - the paper's other authors (the same junction table, minus this researcher)
+      PreparedStatement topicPs = con.prepareStatement(
+          "SELECT ra.name "
+        + "FROM publication_research_area pra "
+        + "JOIN research_area ra ON ra.area_id = pra.area_id "
+        + "WHERE pra.publication_id = ? "
+        + "ORDER BY ra.name");
+      PreparedStatement coauthorPs = con.prepareStatement(
+          "SELECT rp.researcher_id, u.first_name, u.last_name "
+        + "FROM researcher_publication rp "
+        + "JOIN users u ON u.user_id = rp.researcher_id "
+        + "WHERE rp.publication_id = ? AND rp.researcher_id <> ? "
+        + "ORDER BY u.last_name");
+
+      while (pubRs.next()) {
+        int publicationId = pubRs.getInt("publication_id");
+        Map<String, Object> pub = new HashMap<>();
+        pub.put("title", pubRs.getString("title"));
+        pub.put("year", pubRs.getString("publication_year"));
+        pub.put("venue", pubRs.getString("venue"));                 // can be NULL
+        pub.put("url", pubRs.getString("publication_url"));          // can be NULL
+
+        List<String> topics = new ArrayList<>();
+        topicPs.setInt(1, publicationId);
+        ResultSet topicRs = topicPs.executeQuery();
+        while (topicRs.next()) {
+          topics.add(topicRs.getString("name"));
+        }
+        pub.put("topics", topics);
+
+        List<Map<String, Object>> coauthors = new ArrayList<>();
+        coauthorPs.setInt(1, publicationId);
+        coauthorPs.setInt(2, researcherId);                           // leave out this researcher
+        ResultSet coRs = coauthorPs.executeQuery();
+        while (coRs.next()) {
+          Map<String, Object> co = new HashMap<>();
+          co.put("id", coRs.getInt("researcher_id"));
+          co.put("name", coRs.getString("first_name") + " " + coRs.getString("last_name"));
+          coauthors.add(co);
+        }
+        pub.put("coauthors", coauthors);
+
+        publications.add(pub);
+      }
     }
   } catch (Exception e) {
     error = e.getMessage();
@@ -149,6 +208,42 @@
         <% if (profile.get("bio") != null) { %>
           <h2 class="card-subhead">Biography</h2>
           <p><%= esc(profile.get("bio")) %></p>
+        <% } %>
+      </div>
+      
+      <!-- Publications -->
+      <div class="card">
+        <h2>Publications</h2>
+        <% if (publications.isEmpty()) { %>
+          <p>No publications listed yet.</p>
+        <% } else { %>
+          <ul class="plain-list">
+            <% for (Map<String, Object> pub : publications) {
+                 String url = (String) pub.get("url");
+                 List<String> topics = (List<String>) pub.get("topics");
+                 List<Map<String, Object>> coauthors = (List<Map<String, Object>>) pub.get("coauthors"); %>
+              <li>
+                <%-- The title links to the paper only if the link is a normal web address --%>
+                <% if (url != null && url.startsWith("http")) { %>
+                  <a class="item-title" href="<%= esc(url) %>" target="_blank"><%= esc(pub.get("title")) %></a>
+                <% } else { %>
+                  <p class="item-title"><%= esc(pub.get("title")) %></p>
+                <% } %>
+
+                <p class="item-meta">
+                  <%= esc(pub.get("year")) %><%= pub.get("venue") == null ? "" : " &middot; " + esc(pub.get("venue")) %>
+                  <%= topics.isEmpty() ? "" : " &middot; Topics: " + esc(String.join(", ", topics)) %>
+                </p>
+
+                <% if (!coauthors.isEmpty()) { %>
+                  <p class="item-meta">With
+                    <% for (int i = 0; i < coauthors.size(); i++) {
+                         Map<String, Object> co = coauthors.get(i); %><%= i > 0 ? ", " : "" %><a href="researcher.jsp?id=<%= co.get("id") %>"><%= esc(co.get("name")) %></a><% } %>
+                  </p>
+                <% } %>
+              </li>
+            <% } %>
+          </ul>
         <% } %>
       </div>
     <% } %>

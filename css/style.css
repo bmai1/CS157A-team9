@@ -583,3 +583,33 @@ a.result:hover {
 .facts dd {
   margin: 0;
 }
+/* ---------- Lists inside profile cards (publications, opportunities) ---------- */
+
+.plain-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.plain-list > li {
+  padding-block: 0.85rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.plain-list > li:first-child {
+  padding-top: 0;
+}
+
+.plain-list > li:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.item-title {
+  font-weight: 600;
+}
+
+.item-meta {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
