@@ -11,6 +11,8 @@
   } catch (NumberFormatException e) {
     // the id is missing or not a number: keep -1, so the page says "not found"
   }
+  
+  List<String> areas = new ArrayList<>();    // this researcher's research areas
 
   Map<String, Object> profile = null;        // stays null if no researcher has this id
 
@@ -56,6 +58,20 @@
           profile.put("lab", labRs.getString("name"));
         }
       }
+
+      // 4. Research areas. Studies is many-many, so the areas are in the junction table
+      //    researcher_research_area; a theta join to research_area gives their names.
+      PreparedStatement areaPs = con.prepareStatement(
+          "SELECT ra.name "
+        + "FROM researcher_research_area rra "
+        + "JOIN research_area ra ON ra.area_id = rra.area_id "
+        + "WHERE rra.researcher_id = ? "
+        + "ORDER BY ra.name");
+      areaPs.setInt(1, researcherId);
+      ResultSet areaRs = areaPs.executeQuery();
+      while (areaRs.next()) {                                        // a researcher can have many areas
+        areas.add(areaRs.getString("name"));
+      } 
     }
   } catch (Exception e) {
     error = e.getMessage();
@@ -100,6 +116,19 @@
 
           <dt>Research lab</dt>
           <dd><%= profile.get("lab") == null ? "Not part of a lab" : esc(profile.get("lab")) %></dd>
+          
+          <dt>Research areas</dt>
+          <dd>
+            <% if (areas.isEmpty()) { %>
+              None listed
+            <% } else { %>
+              <ul class="chips">
+                <% for (String areaName : areas) { %>
+                  <li><%= esc(areaName) %></li>
+                <% } %>
+              </ul>
+            <% } %>
+          </dd>
 
           <dt>Contact</dt>
           <dd>
