@@ -1,0 +1,32 @@
+<%-- Password hashing helpers (PBKDF2, built into the JDK, no extra jars).
+     Include with: <%@ include file="includes/auth.jspf" %>
+     Stored format in users.password_hash:  iterations:salt:hash  (Base64, ~80 chars) --%>
+<%@ page import="java.security.*, javax.crypto.SecretKeyFactory, javax.crypto.spec.PBEKeySpec" %>
+<%!
+  byte[] pbkdf2(char[] password, byte[] salt, int iterations) throws Exception {
+    PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, 256);
+    return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
+  }
+
+  String hashPassword(String password) throws Exception {
+    byte[] salt = new byte[16];
+    new SecureRandom().nextBytes(salt);
+    int iterations = 120000;
+    byte[] hash = pbkdf2(password.toCharArray(), salt, iterations);
+    return iterations + ":" + Base64.getEncoder().encodeToString(salt)
+         + ":" + Base64.getEncoder().encodeToString(hash);
+  }
+
+  boolean verifyPassword(String password, String stored) {
+    try {
+      String[] parts = stored.split(":");
+      int iterations = Integer.parseInt(parts[0]);
+      byte[] salt = Base64.getDecoder().decode(parts[1]);
+      byte[] expected = Base64.getDecoder().decode(parts[2]);
+      byte[] actual = pbkdf2(password.toCharArray(), salt, iterations);
+      return MessageDigest.isEqual(expected, actual);   // constant-time compare
+    } catch (Exception e) {
+      return false;                                      // malformed or foreign hash format
+    }
+  }
+%>
