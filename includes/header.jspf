@@ -13,12 +13,17 @@
   <header class="site-header">
     <div class="container">
       <a class="wordmark" href="${pageContext.request.contextPath}/index.jsp">
-        </svg>
         ResearchMatch
       </a>
       <nav class="site-nav" aria-label="Main">
-        <a href="${pageContext.request.contextPath}/login.jsp">Log in</a>
-        <a class="btn btn-primary" href="${pageContext.request.contextPath}/register.jsp">Create account</a>
+        <% if (session.getAttribute("userId") != null) { %>
+          <a href="${pageContext.request.contextPath}/dashboard.jsp">Dashboard</a>
+          <a href="${pageContext.request.contextPath}/profile.jsp">Profile</a>
+          <a class="btn btn-primary" href="${pageContext.request.contextPath}/logout.jsp">Log out</a>
+        <% } else { %>
+          <a href="${pageContext.request.contextPath}/login.jsp">Log in</a>
+          <a class="btn btn-primary" href="${pageContext.request.contextPath}/register.jsp">Create account</a>
+        <% } %>
       </nav>
     </div>
   </header>
