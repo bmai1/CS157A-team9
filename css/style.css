@@ -618,3 +618,80 @@ a.result:hover {
   margin-left: 0.5rem;
   font-weight: 600;
 }
+
+/* ---------- Header: links to the search pages ---------- */
+
+.nav-divider {
+  width: 1px;
+  height: 1.5rem;
+  background: var(--line);
+}
+
+@media (max-width: 800px) {
+  .site-header .container {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .site-nav {
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+  }
+
+  .nav-divider {
+    display: none;
+  }
+}
+
+/* ---------- Home: start exploring ---------- */
+
+.explore {
+  padding-block: 4rem;
+  border-top: 1px solid var(--line);
+}
+
+.explore h2 {
+  font-size: clamp(1.75rem, 3.5vw, 2.25rem);
+}
+
+.explore .sub {
+  margin-top: 0.35rem;
+  color: var(--muted);
+}
+
+.explore-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.explore-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.explore-card:hover {
+  border-color: var(--accent);
+}
+
+.explore-card h3 {
+  font-size: 1.25rem;
+}
+
+.explore-card p {
+  flex: 1;
+  color: var(--muted);
+}
+
+.explore-link {
+  color: var(--accent);
+  font-weight: 600;
+}
