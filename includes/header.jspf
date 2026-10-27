@@ -16,6 +16,11 @@
         ResearchMatch
       </a>
       <nav class="site-nav" aria-label="Main">
+      	        <%-- Search pages: open to everyone, logged in or not --%>
+        <a href="${pageContext.request.contextPath}/researchers.jsp">Researchers</a>
+        <a href="${pageContext.request.contextPath}/universities.jsp">Universities</a>
+        <a href="${pageContext.request.contextPath}/opportunities.jsp">Opportunities</a>
+        <span class="nav-divider" aria-hidden="true"></span>
         <% if (session.getAttribute("userId") != null) { %>
           <a href="${pageContext.request.contextPath}/dashboard.jsp">Dashboard</a>
           <a href="${pageContext.request.contextPath}/profile.jsp">Profile</a>
