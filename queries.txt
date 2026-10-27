@@ -1,0 +1,75 @@
+REGISTER:
+INSERT INTO users (first_name, last_name, email, password_hash, role, created_at)
+VALUES (?, ?, ?, ?, ?, NOW());
+
+
+LOGIN:
+SELECT user_id, first_name, last_name, password_hash, role FROM users WHERE email = ?;
+
+
+RESEARCHER:
+(to select researcher)
+SELECT u.first_name, u.last_name, r.academic_title, r.contact_email, r.website, 
+r.biography, r.accepting_phd, r.lab_id, d.name AS department_name, 
+un.name AS university_name, un.city, un.state, un.country
+FROM researcher r JOIN users u ON u.user_id = r.researcher_id
+JOIN department d  ON d.department_id = r.department_id
+JOIN university un ON un.university_id = d.university_id
+WHERE r.researcher_id = ?;
+
+(to select research areas of the researcher)
+SELECT ra.name
+FROM researcher_research_area rra
+JOIN research_area ra ON ra.area_id = rra.area_id
+WHERE rra.researcher_id = ? 
+"ORDER BY ra.name";
+
+(to select publications of the researcher)
+SELECT p.publication_id, p.title, p.publication_year, p.venue, p.publication_url
+FROM publication p
+JOIN researcher_publication rp ON rp.publication_id = p.publication_id
+WHERE rp.researcher_id = ? 
+ORDER BY p.publication_year DESC, p.title;
+
+(to select opportunities of the researcher)
+SELECT o.opportunity_id, o.title, o.opportunity_type, o.funding_available, o.expected_start_term, 
+o.application_deadline, o.application_url 
+FROM opportunity o
+WHERE o.researcher_id = ? AND o.status = 'Open'
+ORDER BY o.application_deadline;
+
+
+UNIVERSITY:
+(to select university)
+SELECT name, city, state, country, website FROM university WHERE university_id = ?
+
+(to select departments at the university)
+SELECT d.name, COUNT(r.researcher_id) AS researcher_count 
+FROM department d
+LEFT JOIN researcher r ON r.department_id = d.department_id
+WHERE d.university_id = ?
+GROUP BY d.department_id, d.name
+ORDER BY d.name
+
+(to select researchers at the university)
+SELECT r.researcher_id, u.first_name, u.last_name, r.academic_title,
+r.accepting_phd, d.name AS department_name
+FROM researcher r
+JOIN users u      ON u.user_id = r.researcher_id
+JOIN department d ON d.department_id = r.department_id
+WHERE d.university_id = ?
+ORDER BY u.last_name, u.first_name
+
+
+OPPORTUNITY:
+(to select opportunity and who offered it)
+SELECT o.title, o.description, o.opportunity_type, o.funding_available,
+o.expected_start_term, o.application_deadline, o.status, o.application_url,
+r.researcher_id, r.academic_title, u.first_name, u.last_name,
+d.name AS department_name, un.university_id, un.name AS university_name
+FROM opportunity o
+JOIN researcher r  ON r.researcher_id = o.researcher_id
+JOIN users u       ON u.user_id = r.researcher_id
+JOIN department d  ON d.department_id = r.department_id
+JOIN university un ON un.university_id = d.university_id
+WHERE o.opportunity_id = ?
