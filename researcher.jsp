@@ -137,7 +137,7 @@
       //    researcher), so researcher_id is a column of opportunity: no join needed.
       //    Only show positions a student can still apply to.
       PreparedStatement oppPs = con.prepareStatement(
-          "SELECT o.title, o.opportunity_type, o.funding_available, o.expected_start_term, "
+          "SELECT o.opportunity_id, o.title, o.opportunity_type, o.funding_available, o.expected_start_term, "
         + "       o.application_deadline, o.application_url "
         + "FROM opportunity o "
         + "WHERE o.researcher_id = ? AND o.status = 'Open' "
@@ -146,6 +146,7 @@
       ResultSet oppRs = oppPs.executeQuery();
       while (oppRs.next()) {
         Map<String, Object> opp = new HashMap<>();
+        opp.put("id", oppRs.getInt("opportunity_id"));
         opp.put("title", oppRs.getString("title"));
         opp.put("type", oppRs.getString("opportunity_type"));
         opp.put("funded", oppRs.getInt("funding_available") == 1);
@@ -281,7 +282,7 @@
                  String url = (String) opp.get("url");
                  boolean funded = (Boolean) opp.get("funded"); %>
               <li>
-                <p class="item-title"><%= esc(opp.get("title")) %></p>
+                <a class="item-title" href="opportunity.jsp?id=<%= opp.get("id") %>"><%= esc(opp.get("title")) %></a>
                 <p class="item-meta">
                   <%= esc(opp.get("type")) %>
                   <%= opp.get("start") == null ? "" : " &middot; Starts " + esc(opp.get("start")) %>
