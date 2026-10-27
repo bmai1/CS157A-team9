@@ -13,7 +13,7 @@
   <header class="site-header">
     <div class="container">
       <a class="wordmark" href="${pageContext.request.contextPath}/index.jsp">
-        ResearchMatch
+        <img src="${pageContext.request.contextPath}/images/logo.png" alt="ResearchMatch" style="height: 40px;">
       </a>
       <nav class="site-nav" aria-label="Main">
         <% if (session.getAttribute("userId") != null) { %>

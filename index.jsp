@@ -13,6 +13,10 @@
         <a class="btn btn-primary" href="${pageContext.request.contextPath}/register.jsp">Create account</a>
         <a class="btn btn-secondary" href="${pageContext.request.contextPath}/login.jsp">Log in</a>
       </div>
+      <div>
+      <img src="${pageContext.request.contextPath}/images/img_homepage.jpg" alt="hompage picture" style="max-width: 90%; height: auto;margin-top: 20px">
+    </div>
+
     </div>
 
     <div class="match-panel">
