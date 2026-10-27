@@ -47,7 +47,31 @@
     </div>
   </div>
 </section>
+<!-- Start exploring: one card for each search page -->
+<section class="explore">
+  <div class="container">
+    <h2>Start exploring</h2>
+    <p class="sub">No account needed to search.</p>
 
+    <div class="explore-grid">
+      <a class="explore-card" href="${pageContext.request.contextPath}/researchers.jsp">
+        <h3>Researchers</h3>
+        <p>Search by name, research area, university, department, or location, and see who is accepting PhD students.</p>
+        <span class="explore-link">Find researchers &rarr;</span>
+      </a>
+      <a class="explore-card" href="${pageContext.request.contextPath}/universities.jsp">
+        <h3>Universities</h3>
+        <p>Search by name, location, department, or research area, then see each university's departments, labs, and researchers.</p>
+        <span class="explore-link">Find universities &rarr;</span>
+      </a>
+      <a class="explore-card" href="${pageContext.request.contextPath}/opportunities.jsp">
+        <h3>Opportunities</h3>
+        <p>Browse open positions by keyword, type, research area, and university, and filter to funded ones.</p>
+        <span class="explore-link">Find opportunities &rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
 <section class="how">
   <div class="container">
     <h2>How it works</h2>
