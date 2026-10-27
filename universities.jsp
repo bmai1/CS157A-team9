@@ -165,7 +165,7 @@
                Integer count = researcherCount.get((Integer) un.get("id"));
                if (count == null) count = 0;                              // no researchers yet
                List<String> uAreas = areasByUniversity.get((Integer) un.get("id")); %>
-            <div class="result">
+            <a class="result" href="university.jsp?id=<%= un.get("id") %>">
               <div class="result-top">
                 <span class="result-title"><%= esc(un.get("name")) %></span>
                 <span class="badge"><%= count %> researcher<%= count == 1 ? "" : "s" %></span>
@@ -180,7 +180,7 @@
                   <% } %>
                 </ul>
               <% } %>
-            </div>
+            </a>
           <% } %>
         <% } %>
       </div>
