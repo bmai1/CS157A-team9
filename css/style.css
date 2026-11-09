@@ -695,3 +695,41 @@ a.result:hover {
   color: var(--accent);
   font-weight: 600;
 }
+
+/* ---------- My profile (edit forms) ---------- */
+
+.container.narrow {
+  max-width: 720px;
+}
+
+.card > .hint {
+  margin-bottom: 1rem;
+}
+
+.field textarea {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background: #ffffff;
+  border: 1.5px solid #b9c6cd;
+  border-radius: 8px;
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+
+.notice {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.notice-ok {
+  background: var(--tint);
+  color: #1b6e3c;
+}
+
+.notice-error {
+  background: #fde8eb;
+  color: #b00020;
+}
