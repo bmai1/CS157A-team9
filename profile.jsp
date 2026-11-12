@@ -30,6 +30,7 @@
   Set<String> myAreas = new HashSet<>();
   List<Map<String, Object>> myOpps = new ArrayList<>();            // this researcher's opportunities
   String[] oppTypes = {"Undergraduate Research", "Research Assistant", "PhD Position", "Summer Internship", "Volunteer"};
+  String[] oppStatuses = {"Open", "Closed", "Filled"};
 
   try (Connection con = getConnection(application)) {
     // 1. Save a form, if one was submitted. Each form has a hidden "form" field
@@ -199,6 +200,22 @@
           response.sendRedirect(request.getContextPath() + "/profile.jsp?saved=1");
           return;
         }
+      }
+
+      //Change an opportunity's status (Open / Closed / Filled).
+      //"AND researcher_id = ?" makes sure researchers can only change their own.
+      if ("oppStatus".equals(form) && isResearcher) {
+        String newStatus = request.getParameter("status");
+        if (Arrays.asList(oppStatuses).contains(newStatus)) {
+          PreparedStatement updOpp = con.prepareStatement(
+              "UPDATE opportunity SET status = ? WHERE opportunity_id = ? AND researcher_id = ?");
+          updOpp.setString(1, newStatus);
+          updOpp.setInt(2, Integer.parseInt(request.getParameter("opportunity_id")));
+          updOpp.setInt(3, userId);
+          updOpp.executeUpdate();
+        }
+        response.sendRedirect(request.getContextPath() + "/profile.jsp?saved=1");
+        return;
       }
     }
 
@@ -443,11 +460,26 @@
           <% } else { %>
             <ul class="plain-list">
               <% for (Map<String, Object> o : myOpps) { %>
-                <li>
-                  <a class="item-title" href="opportunity.jsp?id=<%= o.get("id") %>"><%= esc(o.get("title")) %></a>
-                  <p class="item-meta">
-                    <%= esc(o.get("type")) %><%= o.get("deadline") == null ? "" : " &middot; Apply by " + esc(o.get("deadline")) %> &middot; <%= esc(o.get("status")) %>
-                  </p>
+                                <li class="opp-row">
+                  <div>
+                    <a class="item-title" href="opportunity.jsp?id=<%= o.get("id") %>"><%= esc(o.get("title")) %></a>
+                    <p class="item-meta">
+                      <%= esc(o.get("type")) %><%= o.get("deadline") == null ? "" : " &middot; Apply by " + esc(o.get("deadline")) %>
+                    </p>
+                  </div>
+                  <div class="opp-actions">
+                    <%-- Change status: one small form per opportunity --%>
+                    <form action="profile.jsp" method="post">
+                      <input type="hidden" name="form" value="oppStatus">
+                      <input type="hidden" name="opportunity_id" value="<%= o.get("id") %>">
+                      <select name="status" aria-label="Status">
+                        <% for (String st : oppStatuses) { %>
+                          <option value="<%= st %>" <%= st.equals(o.get("status")) ? "selected" : "" %>><%= st %></option>
+                        <% } %>
+                      </select>
+                      <button type="submit" class="btn btn-secondary btn-small">Update</button>
+                    </form>
+                  </div>
                 </li>
               <% } %>
             </ul>

@@ -740,3 +740,37 @@ a.result:hover {
   gap: 0.6rem 1rem;
   margin-bottom: 1.25rem;
 }
+
+/* My opportunities list on the profile page */
+
+.opp-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.opp-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.opp-actions form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.opp-actions select {
+  padding: 0.35rem 0.5rem;
+  border: 1.5px solid #b9c6cd;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.btn-small {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.9rem;
+}
