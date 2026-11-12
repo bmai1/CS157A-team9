@@ -27,7 +27,9 @@
   List<Map<String, Object>> departments = new ArrayList<>();
   List<Map<String, Object>> labs = new ArrayList<>();
   List<Map<String, Object>> allAreas = new ArrayList<>();          // every research area, for the checkboxes
-  Set<String> myAreas = new HashSet<>();                           // area_ids this researcher has ticked
+  Set<String> myAreas = new HashSet<>();
+  List<Map<String, Object>> myOpps = new ArrayList<>();            // this researcher's opportunities
+  String[] oppTypes = {"Undergraduate Research", "Research Assistant", "PhD Position", "Summer Internship", "Volunteer"};
 
   try (Connection con = getConnection(application)) {
     // 1. Save a form, if one was submitted. Each form has a hidden "form" field
@@ -60,7 +62,7 @@
         try {
           departmentId = Integer.parseInt(request.getParameter("department_id"));
         } catch (NumberFormatException e) {
-          // nothing chosen: stays -1
+          
         }
         Integer labId = null;                          // null means "no lab"
         String labParam = request.getParameter("lab_id");
@@ -118,7 +120,7 @@
           save.setString(4, email);
           save.setString(5, website);
           save.setString(6, bio);
-          save.setInt(7, phd ? 1 : 0);                 // MySQL stores true/false as 1/0
+          save.setInt(7, phd ? 1 : 0);                 
           save.setInt(8, userId);                      // researcher_id is the same as user_id
           save.executeUpdate();
 
@@ -151,6 +153,52 @@
 
         response.sendRedirect(request.getContextPath() + "/profile.jsp?saved=1");
         return;
+      }
+
+      // 1d. Post a new opportunity. Offers is one-many, so the new row just stores
+      //     this researcher's id in its researcher_id column.
+      if ("newOpportunity".equals(form) && isResearcher) {
+        String oTitle = blankToNull(request.getParameter("title"));
+        String oDesc = blankToNull(request.getParameter("description"));
+        String oType = blankToNull(request.getParameter("opportunity_type"));
+        boolean oFunded = "1".equals(request.getParameter("funding_available"));
+        String oStart = blankToNull(request.getParameter("expected_start_term"));
+        String oDeadline = blankToNull(request.getParameter("application_deadline"));   // "2027-01-15" or null
+        String oUrl = blankToNull(request.getParameter("application_url"));
+
+        java.sql.Date deadline = null;                 // stays null if there is no deadline
+        if (oDeadline != null) {
+          try {
+            deadline = java.sql.Date.valueOf(oDeadline); 
+          } catch (IllegalArgumentException e) {
+            error = "Please enter the deadline as a date.";
+          }
+        }
+
+        if (oTitle == null || oDesc == null || oType == null) {
+          error = "Please fill in the title, description, and type.";
+        } else if (error == null) {
+          PreparedStatement insOpp = con.prepareStatement(
+              "INSERT INTO opportunity (researcher_id, title, description, opportunity_type, funding_available, "
+            + "                         expected_start_term, application_deadline, status, application_url) "
+            + "VALUES (?, ?, ?, ?, ?, ?, ?, 'Open', ?)");
+          insOpp.setInt(1, userId);
+          insOpp.setString(2, oTitle);
+          insOpp.setString(3, oDesc);
+          insOpp.setString(4, oType);
+          insOpp.setInt(5, oFunded ? 1 : 0);
+          insOpp.setString(6, oStart);
+          if (deadline == null) {
+            insOpp.setNull(7, Types.DATE);             // SQL NULL: no deadline
+          } else {
+            insOpp.setDate(7, deadline);
+          }
+          insOpp.setString(8, oUrl);
+          insOpp.executeUpdate();                    // opportunity_id is filled in by AUTO_INCREMENT
+
+          response.sendRedirect(request.getContextPath() + "/profile.jsp?saved=1");
+          return;
+        }
       }
     }
 
@@ -227,6 +275,24 @@
       ResultSet myAreaRs = myAreaPs.executeQuery();
       while (myAreaRs.next()) {
         myAreas.add(String.valueOf(myAreaRs.getInt("area_id")));
+      }
+
+      // 6. This researcher's opportunities, every status, newest first
+      PreparedStatement myOppPs = con.prepareStatement(
+          "SELECT opportunity_id, title, opportunity_type, application_deadline, status "
+        + "FROM opportunity "
+        + "WHERE researcher_id = ? "
+        + "ORDER BY opportunity_id DESC");
+      myOppPs.setInt(1, userId);
+      ResultSet myOppRs = myOppPs.executeQuery();
+      while (myOppRs.next()) {
+        Map<String, Object> o = new HashMap<>();
+        o.put("id", myOppRs.getInt("opportunity_id"));
+        o.put("title", myOppRs.getString("title"));
+        o.put("type", myOppRs.getString("opportunity_type"));
+        o.put("deadline", myOppRs.getString("application_deadline"));   // can be NULL
+        o.put("status", myOppRs.getString("status"));
+        myOpps.add(o);
       }
     }
   } catch (Exception e) {
@@ -365,6 +431,70 @@
           </form>
         <% } %>
       </div>
+      
+      <!-- My opportunities: the list, and a form to post a new one -->
+      <% if (!isNew) {
+           // If posting failed, keep what they typed in the new-opportunity form
+           boolean keep = error != null && "newOpportunity".equals(request.getParameter("form")); %>
+        <div class="card">
+          <h2>My opportunities</h2>
+          <% if (myOpps.isEmpty()) { %>
+            <p class="hint">You haven't posted any opportunities yet.</p>
+          <% } else { %>
+            <ul class="plain-list">
+              <% for (Map<String, Object> o : myOpps) { %>
+                <li>
+                  <a class="item-title" href="opportunity.jsp?id=<%= o.get("id") %>"><%= esc(o.get("title")) %></a>
+                  <p class="item-meta">
+                    <%= esc(o.get("type")) %><%= o.get("deadline") == null ? "" : " &middot; Apply by " + esc(o.get("deadline")) %> &middot; <%= esc(o.get("status")) %>
+                  </p>
+                </li>
+              <% } %>
+            </ul>
+          <% } %>
+
+          <h2 class="card-subhead">Post a new opportunity</h2>
+          <form action="profile.jsp" method="post">
+            <input type="hidden" name="form" value="newOpportunity">
+            <div class="field">
+              <label for="title">Title</label>
+              <input type="text" id="title" name="title" value="<%= keep ? esc(request.getParameter("title")) : "" %>" required>
+            </div>
+            <div class="field">
+              <label for="description">Description</label>
+              <textarea id="description" name="description" rows="4" required><%= keep ? esc(request.getParameter("description")) : "" %></textarea>
+            </div>
+            <div class="field">
+              <label for="opportunity_type">Type</label>
+              <select id="opportunity_type" name="opportunity_type" required>
+                <option value="">Choose a type</option>
+                <% for (String t : oppTypes) { %>
+                  <option value="<%= t %>" <%= keep && t.equals(request.getParameter("opportunity_type")) ? "selected" : "" %>><%= t %></option>
+                <% } %>
+              </select>
+            </div>
+            <div class="field">
+              <label for="expected_start_term">Expected start</label>
+              <input type="text" id="expected_start_term" name="expected_start_term" value="<%= keep ? esc(request.getParameter("expected_start_term")) : "" %>" placeholder="e.g. Fall 2027">
+            </div>
+            <div class="field">
+              <label for="application_deadline">Application deadline</label>
+              <input type="date" id="application_deadline" name="application_deadline" value="<%= keep ? esc(request.getParameter("application_deadline")) : "" %>">
+            </div>
+            <div class="field">
+              <label for="application_url">Application link</label>
+              <input type="url" id="application_url" name="application_url" value="<%= keep ? esc(request.getParameter("application_url")) : "" %>" placeholder="https://">
+            </div>
+            <div class="field">
+              <label class="check">
+                <input type="checkbox" name="funding_available" value="1" <%= keep && "1".equals(request.getParameter("funding_available")) ? "checked" : "" %>>
+                Funding is available
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Post opportunity</button>
+          </form>
+        </div>
+      <% } %>
     <% } %>
   </div>
 </section>
