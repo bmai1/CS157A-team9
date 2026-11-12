@@ -217,6 +217,17 @@
         response.sendRedirect(request.getContextPath() + "/profile.jsp?saved=1");
         return;
       }
+
+      // Delete an opportunity, again only if it belongs to this researcher.
+      if ("deleteOpp".equals(form) && isResearcher) {
+        PreparedStatement delOpp = con.prepareStatement(
+            "DELETE FROM opportunity WHERE opportunity_id = ? AND researcher_id = ?");
+        delOpp.setInt(1, Integer.parseInt(request.getParameter("opportunity_id")));
+        delOpp.setInt(2, userId);
+        delOpp.executeUpdate();
+        response.sendRedirect(request.getContextPath() + "/profile.jsp?saved=1");
+        return;
+      }
     }
 
     // 2. Load the account (every user has one row in users)
@@ -479,7 +490,12 @@
                       </select>
                       <button type="submit" class="btn btn-secondary btn-small">Update</button>
                     </form>
-                  </div>
+                    <form action="profile.jsp" method="post">
+                      <input type="hidden" name="form" value="deleteOpp">
+                      <input type="hidden" name="opportunity_id" value="<%= o.get("id") %>">
+                      <button type="submit" class="btn-link-danger">Delete</button>
+                    </form>
+                  </div>       
                 </li>
               <% } %>
             </ul>

@@ -774,3 +774,17 @@ a.result:hover {
   padding: 0.35rem 0.85rem;
   font-size: 0.9rem;
 }
+
+.btn-link-danger {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #b00020;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-link-danger:hover {
+  text-decoration: underline;
+}
