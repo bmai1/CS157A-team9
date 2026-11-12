@@ -26,6 +26,8 @@
   Map<String, Object> details = null;                // the researcher row (null if not filled in yet)
   List<Map<String, Object>> departments = new ArrayList<>();
   List<Map<String, Object>> labs = new ArrayList<>();
+  List<Map<String, Object>> allAreas = new ArrayList<>();          // every research area, for the checkboxes
+  Set<String> myAreas = new HashSet<>();                           // area_ids this researcher has ticked
 
   try (Connection con = getConnection(application)) {
     // 1. Save a form, if one was submitted. Each form has a hidden "form" field
@@ -124,6 +126,32 @@
           return;
         }
       }
+
+      // 1c. Research areas. Studies is many-many, so the areas are rows in the
+      //     junction table researcher_research_area. To save the checkboxes we
+      //     delete this researcher's old rows, then insert one row per ticked box.
+      if ("areas".equals(form) && isResearcher) {
+        String[] chosen = request.getParameterValues("area_id");     // null if no box is ticked
+
+        PreparedStatement del = con.prepareStatement(
+            "DELETE FROM researcher_research_area WHERE researcher_id = ?");
+        del.setInt(1, userId);
+        del.executeUpdate();                         // removes only this researcher's rows
+
+        if (chosen != null) {
+          // Prepared once, run once per ticked box with a different area_id
+          PreparedStatement ins = con.prepareStatement(
+              "INSERT INTO researcher_research_area (researcher_id, area_id) VALUES (?, ?)");
+          for (String areaId : chosen) {
+            ins.setInt(1, userId);
+            ins.setInt(2, Integer.parseInt(areaId));
+            ins.executeUpdate();
+          }
+        }
+
+        response.sendRedirect(request.getContextPath() + "/profile.jsp?saved=1");
+        return;
+      }
     }
 
     // 2. Load the account (every user has one row in users)
@@ -183,6 +211,22 @@
         l.put("id", String.valueOf(labRs.getInt("lab_id")));
         l.put("name", labRs.getString("name") + " (" + labRs.getString("university_name") + ")");
         labs.add(l);
+      }
+
+      // 5. Every research area (for the checkboxes) and the ones this researcher has
+      ResultSet allAreaRs = listStmt.executeQuery("SELECT area_id, name FROM research_area ORDER BY name");
+      while (allAreaRs.next()) {
+        Map<String, Object> a = new HashMap<>();
+        a.put("id", String.valueOf(allAreaRs.getInt("area_id")));
+        a.put("name", allAreaRs.getString("name"));
+        allAreas.add(a);
+      }
+      PreparedStatement myAreaPs = con.prepareStatement(
+          "SELECT area_id FROM researcher_research_area WHERE researcher_id = ?");
+      myAreaPs.setInt(1, userId);
+      ResultSet myAreaRs = myAreaPs.executeQuery();
+      while (myAreaRs.next()) {
+        myAreas.add(String.valueOf(myAreaRs.getInt("area_id")));
       }
     }
   } catch (Exception e) {
@@ -298,6 +342,28 @@
           </div>
           <button type="submit" class="btn btn-primary">Save details</button>
         </form>
+      </div>
+      
+      <!-- Research areas: one checkbox per area -->
+      <div class="card">
+        <h2>Research areas</h2>
+        <% if (isNew) { %>
+          <p class="hint">Save your researcher details first, then choose your research areas.</p>
+        <% } else { %>
+          <p class="hint">Tick every area you work in. Students can filter by these when they search.</p>
+          <form action="profile.jsp" method="post">
+            <input type="hidden" name="form" value="areas">
+            <div class="checkbox-grid">
+              <% for (Map<String, Object> a : allAreas) { %>
+                <label class="check">
+                  <input type="checkbox" name="area_id" value="<%= a.get("id") %>" <%= myAreas.contains(a.get("id")) ? "checked" : "" %>>
+                  <%= esc(a.get("name")) %>
+                </label>
+              <% } %>
+            </div>
+            <button type="submit" class="btn btn-primary">Save research areas</button>
+          </form>
+        <% } %>
       </div>
     <% } %>
   </div>

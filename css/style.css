@@ -733,3 +733,10 @@ a.result:hover {
   background: #fde8eb;
   color: #b00020;
 }
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.6rem 1rem;
+  margin-bottom: 1.25rem;
+}
