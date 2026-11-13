@@ -21,6 +21,7 @@
 
   int userId = (Integer) session.getAttribute("userId");                 // who is logged in
   boolean isResearcher = "researcher".equals(session.getAttribute("userRole"));
+  boolean isStudent = "student".equals(session.getAttribute("userRole"));
 
   Map<String, Object> account = null;                // the users row
   Map<String, Object> details = null;                // the researcher row (null if not filled in yet)
@@ -31,6 +32,7 @@
   List<Map<String, Object>> myOpps = new ArrayList<>();            // this researcher's opportunities
   String[] oppTypes = {"Undergraduate Research", "Research Assistant", "PhD Position", "Summer Internship", "Volunteer"};
   String[] oppStatuses = {"Open", "Closed", "Filled"};
+  String major = null;                                             // the student row's major (null if not filled in yet)
 
   try (Connection con = getConnection(application)) {
     // 1. Save a form, if one was submitted. Each form has a hidden "form" field
@@ -228,6 +230,34 @@
         response.sendRedirect(request.getContextPath() + "/profile.jsp?saved=1");
         return;
       }
+
+      // 1g. Student details: INSERT the first time, UPDATE after that.
+      //     A student is a user (ISA), so student_id is the same as user_id.
+      if ("student".equals(form) && isStudent) {
+        String newMajor = blankToNull(request.getParameter("major"));
+        if (newMajor == null) {
+          error = "Please enter your major.";
+        } else {
+          PreparedStatement stuExists = con.prepareStatement(
+              "SELECT student_id FROM student WHERE student_id = ?");
+          stuExists.setInt(1, userId);
+          boolean hasStudentRow = stuExists.executeQuery().next();
+
+          // Same 2 values in the same order for both statements
+          PreparedStatement saveStu;
+          if (hasStudentRow) {
+            saveStu = con.prepareStatement("UPDATE student SET major = ? WHERE student_id = ?");
+          } else {
+            saveStu = con.prepareStatement("INSERT INTO student (major, student_id) VALUES (?, ?)");
+          }
+          saveStu.setString(1, newMajor);
+          saveStu.setInt(2, userId);
+          saveStu.executeUpdate();
+
+          response.sendRedirect(request.getContextPath() + "/profile.jsp?saved=1");
+          return;
+        }
+      }
     }
 
     // 2. Load the account (every user has one row in users)
@@ -321,6 +351,16 @@
         o.put("deadline", myOppRs.getString("application_deadline"));   // can be NULL
         o.put("status", myOppRs.getString("status"));
         myOpps.add(o);
+      }
+    }
+
+    if (isStudent) {
+      // 7. Load the student row, if it exists yet
+      PreparedStatement stuPs = con.prepareStatement("SELECT major FROM student WHERE student_id = ?");
+      stuPs.setInt(1, userId);
+      ResultSet stuRs = stuPs.executeQuery();
+      if (stuRs.next()) {
+        major = stuRs.getString("major");
       }
     }
   } catch (Exception e) {
@@ -543,6 +583,24 @@
           </form>
         </div>
       <% } %>
+    <% } %>
+    
+    <% if (isStudent) { %>
+      <!-- Student details -->
+      <div class="card">
+        <h2>Student details</h2>
+        <% if (major == null) { %>
+          <p class="hint">Add your major to finish setting up your student profile.</p>
+        <% } %>
+        <form action="profile.jsp" method="post">
+          <input type="hidden" name="form" value="student">
+          <div class="field">
+            <label for="major">Major</label>
+            <input type="text" id="major" name="major" value="<%= major == null ? "" : esc(major) %>" placeholder="e.g. Computer Science" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Save major</button>
+        </form>
+      </div>
     <% } %>
   </div>
 </section>
