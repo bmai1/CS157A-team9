@@ -33,6 +33,7 @@
   String[] oppTypes = {"Undergraduate Research", "Research Assistant", "PhD Position", "Summer Internship", "Volunteer"};
   String[] oppStatuses = {"Open", "Closed", "Filled"};
   String major = null;                                             // the student row's major (null if not filled in yet)
+  List<Map<String, Object>> savedOpps = new ArrayList<>();         // opportunities this student saved
 
   try (Connection con = getConnection(application)) {
     // 1. Save a form, if one was submitted. Each form has a hidden "form" field
@@ -258,6 +259,30 @@
           return;
         }
       }
+
+      // 1h. Notes on a saved opportunity. The WHERE uses both parts of the primary key,
+      //     so exactly one row (this student's save of this opportunity) changes.
+      if ("savedNotes".equals(form) && isStudent) {
+        PreparedStatement notesPs = con.prepareStatement(
+            "UPDATE saved_opportunity SET notes = ? WHERE student_id = ? AND opportunity_id = ?");
+        notesPs.setString(1, blankToNull(request.getParameter("notes")));   // empty box -> NULL
+        notesPs.setInt(2, userId);
+        notesPs.setInt(3, Integer.parseInt(request.getParameter("opportunity_id")));
+        notesPs.executeUpdate();
+        response.sendRedirect(request.getContextPath() + "/profile.jsp?saved=1");
+        return;
+      }
+
+      // 1i. Remove a saved opportunity (same DELETE as the button on the opportunity page)
+      if ("unsave".equals(form) && isStudent) {
+        PreparedStatement unsavePs = con.prepareStatement(
+            "DELETE FROM saved_opportunity WHERE student_id = ? AND opportunity_id = ?");
+        unsavePs.setInt(1, userId);
+        unsavePs.setInt(2, Integer.parseInt(request.getParameter("opportunity_id")));
+        unsavePs.executeUpdate();
+        response.sendRedirect(request.getContextPath() + "/profile.jsp?saved=1");
+        return;
+      }
     }
 
     // 2. Load the account (every user has one row in users)
@@ -361,6 +386,35 @@
       ResultSet stuRs = stuPs.executeQuery();
       if (stuRs.next()) {
         major = stuRs.getString("major");
+      }
+
+      // 8. The opportunities this student saved, newest save first. saved_opportunity only
+      //    stores ids, so we join along the foreign keys to get the title, the researcher's
+      //    name, and the university.
+      PreparedStatement savedPs = con.prepareStatement(
+          "SELECT so.opportunity_id, so.saved_at, so.notes, o.title, o.status, o.application_deadline, "
+        + "       u.first_name, u.last_name, un.name AS university_name "
+        + "FROM saved_opportunity so "
+        + "JOIN opportunity o  ON o.opportunity_id = so.opportunity_id "
+        + "JOIN researcher r   ON r.researcher_id = o.researcher_id "
+        + "JOIN users u        ON u.user_id = r.researcher_id "
+        + "JOIN department d   ON d.department_id = r.department_id "
+        + "JOIN university un  ON un.university_id = d.university_id "
+        + "WHERE so.student_id = ? "
+        + "ORDER BY so.saved_at DESC");
+      savedPs.setInt(1, userId);
+      ResultSet savedRs = savedPs.executeQuery();
+      while (savedRs.next()) {
+        Map<String, Object> so = new HashMap<>();
+        so.put("id", savedRs.getInt("opportunity_id"));
+        so.put("title", savedRs.getString("title"));
+        so.put("status", savedRs.getString("status"));
+        so.put("deadline", savedRs.getString("application_deadline"));        // can be NULL
+        so.put("researcher", savedRs.getString("first_name") + " " + savedRs.getString("last_name"));
+        so.put("university", savedRs.getString("university_name"));
+        so.put("savedOn", savedRs.getString("saved_at").substring(0, 10));   // "2026-11-12 16:13:47" -> "2026-11-12"
+        so.put("notes", savedRs.getString("notes"));                         // can be NULL
+        savedOpps.add(so);
       }
     }
   } catch (Exception e) {
@@ -601,6 +655,45 @@
           <button type="submit" class="btn btn-primary">Save major</button>
         </form>
       </div>
+      
+      <!-- Saved opportunities: only once the student row exists -->
+      <% if (major != null) { %>
+        <div class="card">
+          <h2>Saved opportunities</h2>
+          <% if (savedOpps.isEmpty()) { %>
+            <p class="hint">Nothing saved yet. Open an opportunity and click <b>Save opportunity</b>.</p>
+          <% } else { %>
+            <ul class="plain-list">
+              <% for (Map<String, Object> so : savedOpps) { %>
+                <li>
+                  <a class="item-title" href="opportunity.jsp?id=<%= so.get("id") %>"><%= esc(so.get("title")) %></a>
+                  <p class="item-meta">
+                    <%= esc(so.get("researcher")) %> &middot; <%= esc(so.get("university")) %> &middot; <%= esc(so.get("status")) %><%= so.get("deadline") == null ? "" : " &middot; Apply by " + esc(so.get("deadline")) %>
+                  </p>
+                  <p class="item-meta">Saved on <%= esc(so.get("savedOn")) %></p>
+
+                  <div class="saved-actions">
+                    <form action="profile.jsp" method="post" class="notes-form">
+                      <input type="hidden" name="form" value="savedNotes">
+                      <input type="hidden" name="opportunity_id" value="<%= so.get("id") %>">
+                      <div class="field">
+                        <label for="notes-<%= so.get("id") %>">My notes</label>
+                        <textarea id="notes-<%= so.get("id") %>" name="notes" rows="2"><%= so.get("notes") == null ? "" : esc(so.get("notes")) %></textarea>
+                      </div>
+                      <button type="submit" class="btn btn-secondary btn-small">Save notes</button>
+                    </form>
+                    <form action="profile.jsp" method="post">
+                      <input type="hidden" name="form" value="unsave">
+                      <input type="hidden" name="opportunity_id" value="<%= so.get("id") %>">
+                      <button type="submit" class="btn-link-danger">Remove</button>
+                    </form>
+                  </div>
+                </li>
+              <% } %>
+            </ul>
+          <% } %>
+        </div>
+      <% } %>
     <% } %>
   </div>
 </section>
