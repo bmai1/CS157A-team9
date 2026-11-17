@@ -73,3 +73,95 @@ JOIN users u       ON u.user_id = r.researcher_id
 JOIN department d  ON d.department_id = r.department_id
 JOIN university un ON un.university_id = d.university_id
 WHERE o.opportunity_id = ?
+
+PROFILE:
+(Update the logged-in user's first and last name)
+UPDATE users
+SET first_name = ?, last_name = ?
+WHERE user_id = ?;
+
+(Verify that the selected lab belongs to the selected department)
+SELECT lab_id
+FROM lab
+WHERE lab_id = ? AND department_id = ?;
+
+(Check whether a researcher record already exists for the user)
+SELECT researcher_id
+FROM researcher
+WHERE researcher_id = ?;
+
+(Update an existing researcher's profile information)
+UPDATE researcher
+SET department_id = ?, lab_id = ?, academic_title = ?, contact_email = ?,
+    website = ?, biography = ?, accepting_phd = ?
+WHERE researcher_id = ?;
+
+(Create a new researcher profile)
+INSERT INTO researcher (
+    department_id, lab_id, academic_title, contact_email,
+    website, biography, accepting_phd, researcher_id
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+(Delete the researcher's previously selected research areas)
+DELETE FROM researcher_research_area
+WHERE researcher_id = ?;
+
+(Associate a researcher with a selected research area)
+INSERT INTO researcher_research_area (researcher_id, area_id)
+VALUES (?, ?);
+
+(Create a new research opportunity)
+INSERT INTO opportunity (
+    researcher_id, title, description, opportunity_type, funding_available,
+    expected_start_term, application_deadline, status, application_url
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, 'Open', ?);
+
+(Update the status of an opportunity owned by the researcher)
+UPDATE opportunity
+SET status = ?
+WHERE opportunity_id = ? AND researcher_id = ?;
+
+(Delete an opportunity owned by the researcher)
+DELETE FROM opportunity
+WHERE opportunity_id = ? AND researcher_id = ?;
+
+(Retrieve the logged-in user's account information)
+SELECT first_name, last_name, email, role
+FROM users
+WHERE user_id = ?;
+
+(Retrieve the researcher's saved profile information)
+SELECT department_id, lab_id, academic_title, contact_email, website, biography, accepting_phd
+FROM researcher
+WHERE researcher_id = ?;
+
+(Retrieve all departments and their associated university names)
+SELECT d.department_id, d.name, un.name AS university_name
+FROM department d
+JOIN university un ON un.university_id = d.university_id
+ORDER BY un.name, d.name;
+
+(Retrieve all research labs and their associated university names)
+SELECT l.lab_id, l.name, un.name AS university_name
+FROM lab l
+JOIN department d ON d.department_id = l.department_id
+JOIN university un ON un.university_id = d.university_id
+ORDER BY un.name, l.name;
+
+(Retrieve all available research areas for the checkbox list)
+SELECT area_id, name
+FROM research_area
+ORDER BY name;
+
+(Retrieve the research areas selected by the researcher)
+SELECT area_id
+FROM researcher_research_area
+WHERE researcher_id = ?;
+
+(Retrieve all opportunities posted by the researcher, newest first)
+SELECT opportunity_id, title, opportunity_type, application_deadline, status
+FROM opportunity
+WHERE researcher_id = ?
+ORDER BY opportunity_id DESC;
