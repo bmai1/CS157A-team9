@@ -788,3 +788,7 @@ a.result:hover {
 .btn-link-danger:hover {
   text-decoration: underline;
 }
+
+.save-form {
+  margin-top: 1rem;
+}

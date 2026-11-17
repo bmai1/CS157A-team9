@@ -17,7 +17,42 @@
 
   Map<String, Object> opp = null;            // stays null if no opportunity has this id
 
+  // Saving: only for logged-in students
+  boolean isStudent = "student".equals(session.getAttribute("userRole"));
+  int userId = isStudent ? (Integer) session.getAttribute("userId") : -1;
+  boolean hasStudentRow = false;             // true once the student has saved their major
+  boolean isSaved = false;                   // true if this student already saved this opportunity
+
   try (Connection con = getConnection(application)) {
+	    // 1b. Save or unsave, if a student clicked the button. The form sends
+	    //     action=save or action=unsave and the opportunity id.
+	    if ("POST".equalsIgnoreCase(request.getMethod()) && isStudent) {
+	      String action = request.getParameter("action");
+	      if ("save".equals(action)) {
+	        // Only save if it isn't saved already: (student_id, opportunity_id) is the
+	        // primary key, so saving the same opportunity twice would be an error.
+	        PreparedStatement checkPs = con.prepareStatement(
+	            "SELECT student_id FROM saved_opportunity WHERE student_id = ? AND opportunity_id = ?");
+	        checkPs.setInt(1, userId);
+	        checkPs.setInt(2, opportunityId);
+	        if (!checkPs.executeQuery().next()) {
+	          // saved_at fills itself in (DEFAULT CURRENT_TIMESTAMP); notes start empty (NULL)
+	          PreparedStatement savePs = con.prepareStatement(
+	              "INSERT INTO saved_opportunity (student_id, opportunity_id) VALUES (?, ?)");
+	          savePs.setInt(1, userId);
+	          savePs.setInt(2, opportunityId);
+	          savePs.executeUpdate();
+	        }
+	      } else if ("unsave".equals(action)) {
+	        PreparedStatement unsavePs = con.prepareStatement(
+	            "DELETE FROM saved_opportunity WHERE student_id = ? AND opportunity_id = ?");
+	        unsavePs.setInt(1, userId);
+	        unsavePs.setInt(2, opportunityId);
+	        unsavePs.executeUpdate();
+	      }
+	      response.sendRedirect(request.getContextPath() + "/opportunity.jsp?id=" + opportunityId);
+	      return;
+	    }
     // 2. The opportunity plus who offers it and where (theta joins on the foreign keys)
     PreparedStatement ps = con.prepareStatement(
         "SELECT o.title, o.description, o.opportunity_type, o.funding_available, "
@@ -83,6 +118,19 @@
         o.put("deadline", otherRs.getString("application_deadline"));
         others.add(o);
       }
+    }
+
+    // 5. For students: do they have a student row yet and did they save this one?
+    if (isStudent) {
+      PreparedStatement stuPs = con.prepareStatement("SELECT student_id FROM student WHERE student_id = ?");
+      stuPs.setInt(1, userId);
+      hasStudentRow = stuPs.executeQuery().next();
+
+      PreparedStatement savedPs = con.prepareStatement(
+          "SELECT saved_at FROM saved_opportunity WHERE student_id = ? AND opportunity_id = ?");
+      savedPs.setInt(1, userId);
+      savedPs.setInt(2, opportunityId);
+      isSaved = savedPs.executeQuery().next();
     }
   } catch (Exception e) {
     error = e.getMessage();
@@ -161,6 +209,19 @@
           <p><a class="btn btn-primary" href="<%= esc(url) %>" target="_blank">Apply &rarr;</a></p>
         <% } else if (!isOpen) { %>
           <p>This position is no longer open.</p>
+        <% } %>
+        <%-- Save button: students only. A student needs a student row (their major) first,
+             because saved_opportunity has a foreign key to student. --%>
+        <% if (isStudent && !hasStudentRow) { %>
+          <p class="hint"><a href="profile.jsp">Add your major on My profile</a> to save opportunities.</p>
+        <% } else if (isStudent) { %>
+          <form action="opportunity.jsp?id=<%= opportunityId %>" method="post" class="save-form">
+            <input type="hidden" name="id" value="<%= opportunityId %>">
+            <input type="hidden" name="action" value="<%= isSaved ? "unsave" : "save" %>">
+            <button type="submit" class="btn btn-secondary"><%= isSaved ? "&#9733; Saved (click to remove)" : "&#9734; Save opportunity" %></button>
+          </form>
+        <% } else if (session.getAttribute("userId") == null) { %>
+          <p class="hint"><a href="login.jsp">Log in as a student</a> to save this opportunity.</p>
         <% } %>
       </div>
 
