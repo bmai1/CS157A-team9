@@ -81,8 +81,8 @@
     if (!areaId.isEmpty()) {
       // An opportunity has no research area of its own, so we use the areas of the
       // researcher who offers it (many-many, via researcher_research_area).
-      sql.append("AND r.researcher_id IN "
-               + "(SELECT rra.researcher_id FROM researcher_research_area rra WHERE rra.area_id = ?) ");
+      sql.append("AND o.opportunity_id IN "   // the old one is wrong: query on the wrong table. 
+         + "(SELECT ora.opportunity_id FROM opportunity_research_area ora WHERE ora.area_id = ?) "); 
       params.add(Integer.parseInt(areaId));
     }
     if (fundedOnly) {

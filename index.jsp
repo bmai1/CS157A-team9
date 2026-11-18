@@ -25,22 +25,22 @@
         <ul class="chips">
           <li>Machine learning</li>
           <li>Robotics</li>
-          <li>Money</li>
+          <li>Databases</li>
         </ul>
       </div>
 
       <div class="match-row is-best">
         <span class="tag">Best match</span>
-        <p class="match-title">Cancer research</p>
-        <p class="match-meta">Public Health Lab &middot; Full-time</p>
+        <p class="match-title">PhD Position in Robust Machine Learning</p>
+        <p class="match-meta">Trustworthy ML Group &middot; Funded</p>
       </div>
       <div class="match-row">
-        <p class="match-title">Sleep deprivation study</p>
-        <p class="match-meta">Psychology Lab &middot; Part-time</p>
+        <p class="match-title">Robotics Summer Internship</p>
+        <p class="match-meta">Autonomous Robotics Lab &middot; Summer 2027</p>
       </div>
       <div class="match-row">
-        <p class="match-title">Save Earth before it explodes!!!</p>
-        <p class="match-meta">Environmental Engineering &middot; 8 hours a week</p>
+        <p class="match-title">Undergraduate Security Research Project</p>
+        <p class="match-meta">Secure Systems Lab &middot; Spring 2027</p>
       </div>
 
       <p class="panel-caption">Sample matches</p>
@@ -61,7 +61,7 @@
       </a>
       <a class="explore-card" href="${pageContext.request.contextPath}/universities.jsp">
         <h3>Universities</h3>
-        <p>Search by name, location, department, or research area, then see each university's departments, labs, and researchers.</p>
+        <p>Search by name, location, department, or research area, then see each university's departments, researchers, and open opportunities.</p>
         <span class="explore-link">Find universities &rarr;</span>
       </a>
       <a class="explore-card" href="${pageContext.request.contextPath}/opportunities.jsp">
@@ -78,16 +78,16 @@
     <ol class="steps-list">
       <li>
         <h3>Create your profile</h3>
-        <p>Add your research interests.</p>
-      </li>
+        <p>Sign up as a student or researcher. Researchers add their department, lab, research areas, and PhD availability.</p>
+  </li>
       <li>
         <h3>Find researchers</h3>
-        <p>text text text</p>
-      </li>
+        <p>Search by research area, university, department, or location, and filter to researchers accepting PhD students or funded positions.</p>
+  </li>
       <li>
         <h3>Reach out</h3>
-        <p>text text text</p>
-      </li>
+        <p>Open a researcher's profile to see their publications and open positions, then email them or apply through the opportunity's link.</p>
+  </li>
     </ol>
   </div>
 </section>
